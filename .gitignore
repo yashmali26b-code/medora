@@ -7,6 +7,8 @@ dist/
 build/
 *.dist
 /backend/
+/backend/dist/
+/backend/node_modules/
 
 # Environment variables
 .env

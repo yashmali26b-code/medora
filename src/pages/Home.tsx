@@ -2,7 +2,7 @@
  * Medora style reminder — cobalt-and-aqua clinical search, clean white data surfaces,
  * and the supplied magnifier-and-M identity as the signature motif.
  */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import logoMark from "../assets/logo.jpeg";
 import nameMark from "../assets/name.jpeg";
 import "../medora.css";
@@ -198,11 +198,19 @@ export default function Home() {
   const [ageBand, setAgeBand] = useState<string | null>(null);
   const [viewer, setViewer] = useState<"me" | "someone">("me");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [medo, setMedo] = useState<MedoResponse | null>(null);
   const [medoLoading, setMedoLoading] = useState(false);
   const [medoError, setMedoError] = useState<string | null>(null);
+  const [medoRenderKey, setMedoRenderKey] = useState(0);
   const searchSectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (window.localStorage.getItem("medora-dev-credit-seen") !== "true") {
+      setWelcomeOpen(true);
+    }
+  }, []);
 
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
   const isEmergency = emergencyTerms.some((term) => normalizedQuery.includes(term));
@@ -230,6 +238,7 @@ export default function Home() {
     setHasSearched(true);
     setMedo(null);
     setMedoError(null);
+    setMedoRenderKey((k) => k + 1);
 
     await fetchMedo(value, kind, viewer, ageBand);
 
@@ -265,15 +274,15 @@ export default function Home() {
   function renderMedoPanel() {
     if (medoLoading) {
       return (
-        <div className="medo-panel medo-loading" aria-live="polite">
+        <div className="medo-panel medo-loading" key={`medo-load-${medoRenderKey}`} aria-live="polite">
           <Loader2 size={18} className="medo-spin" aria-hidden="true" />
-          <p>Medo is reviewing the symptoms…</p>
+          <p>Medo is reviewing the symptoms<span className="medo-dots" /></p>
         </div>
       );
     }
     if (medoError) {
       return (
-        <div className="medo-panel medo-error" role="alert">
+        <div className="medo-panel medo-error" key={`medo-err-${medoRenderKey}`} role="alert">
           <ShieldAlert size={18} aria-hidden="true" />
           <div>
             <p className="medo-title">Medo is unavailable</p>
@@ -285,7 +294,7 @@ export default function Home() {
     if (!medo) return null;
 
     return (
-      <div className="medo-panel" aria-live="polite">
+      <div className="medo-panel" key={`medo-${medoRenderKey}`} aria-live="polite">
         <div className="medo-panel-head">
           <div className="medo-badge">
             <Stethoscope size={16} aria-hidden="true" />
@@ -308,7 +317,7 @@ export default function Home() {
             <h5><Pill size={15} aria-hidden="true" /> Suggested medicines</h5>
             <div className="medo-medicine-grid">
               {medo.medicines.map((m) => (
-                <article className="medo-medicine-card" key={`${m.name}-${m.category}`}>
+                <article className="medo-medicine-card" key={`${m.name}-${m.category}-${medoRenderKey}`}>
                   <header>
                     <span className="medo-medicine-name">{m.name}</span>
                     <span className="medo-medicine-category">{m.category}</span>
@@ -316,10 +325,10 @@ export default function Home() {
                   <p><b>Purpose:</b> {m.purpose}</p>
                   <p><b>Typical adult dose:</b> {m.dosage}</p>
                   {m.warnings.length > 0 && (
-                    <p><b>Warnings:</b> {m.warnings.join("; ")}</p>
+                    <p className="medo-medicine-text"><b>Warnings:</b> <span className="medo-chip-list">{m.warnings.map((w) => <span key={w} className="medo-chip">{w}</span>)}</span></p>
                   )}
                   {m.interactions.length > 0 && (
-                    <p><b>Interactions:</b> {m.interactions.join(", ")}</p>
+                    <p className="medo-medicine-text"><b>Interactions:</b> <span className="medo-chip-list">{m.interactions.map((i) => <span key={i} className="medo-chip">{i}</span>)}</span></p>
                   )}
                 </article>
               ))}
@@ -674,6 +683,45 @@ export default function Home() {
             <p>In the live product, this form would securely route the page version and your concern to a clinical review team. Please do not include urgent symptoms here.</p>
             <textarea aria-label="Describe your concern" placeholder="Describe the page or information that concerns you…" />
             <button className="primary-button" type="button" onClick={() => { setFeedbackOpen(false); toast.success("Concern noted for review."); }}>Send report <ArrowRight size={17} /></button>
+          </section>
+        </div>
+      )}
+
+      {welcomeOpen && (
+        <div className="dev-credit-backdrop" role="presentation" onMouseDown={() => { setWelcomeOpen(false); window.localStorage.setItem("medora-dev-credit-seen", "true"); }}>
+          <section
+            className="dev-credit-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dev-credit-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="dev-credit-topline">
+              <span className="dev-credit-dot" aria-hidden="true" />
+              <span>WELCOME</span>
+              <span>V1.0 · US RELEASE</span>
+            </div>
+            <p className="eyebrow dev-credit-eyebrow"><span /> A NOTE BEFORE YOU SEARCH</p>
+            <h2 id="dev-credit-title">
+              This website has been<br />developed by <span className="dev-credit-name">Yash Mali</span>.
+            </h2>
+            <p className="dev-credit-copy">
+              Medora is an educational health search reference. It is built to help you find credible information
+              and choose a more considered next step — not to diagnose or replace a clinician.
+            </p>
+            <div className="dev-credit-stamp">
+              <span>DEVELOPER</span>
+              <b>Yash Mali</b>
+              <span>EDITION</span>
+              <b>Medora V1.0</b>
+            </div>
+            <button
+              className="primary-button dev-credit-cta"
+              type="button"
+              onClick={() => { setWelcomeOpen(false); window.localStorage.setItem("medora-dev-credit-seen", "true"); }}
+            >
+              Got it, continue <ArrowRight size={17} aria-hidden="true" />
+            </button>
           </section>
         </div>
       )}
