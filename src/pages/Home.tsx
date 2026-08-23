@@ -19,6 +19,7 @@ import {
   HeartPulse,
   Info,
   LifeBuoy,
+  Loader2,
   Pill,
   Search,
   ShieldAlert,
@@ -28,6 +29,33 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiLinker } from "../api-linker.js";
+
+type MedoMedicine = {
+  name: string;
+  category: string;
+  purpose: string;
+  dosage: string;
+  warnings: string[];
+  interactions: string[];
+};
+
+type MedoResponse = {
+  condition: string;
+  summary: string;
+  severity: "mild" | "moderate" | "severe" | "urgent";
+  selfCare: string[];
+  medicines: MedoMedicine[];
+  whenToSeekHelp: string[];
+  redFlags: string[];
+  disclaimer: string;
+  agent: {
+    name: string;
+    createdBy: string;
+    createdOn: string;
+    speciality: string;
+  };
+};
 
 type SearchType = "symptom" | "illness" | "medicine";
 
@@ -171,6 +199,9 @@ export default function Home() {
   const [viewer, setViewer] = useState<"me" | "someone">("me");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [medo, setMedo] = useState<MedoResponse | null>(null);
+  const [medoLoading, setMedoLoading] = useState(false);
+  const [medoError, setMedoError] = useState<string | null>(null);
   const searchSectionRef = useRef<HTMLElement>(null);
 
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
@@ -187,18 +218,135 @@ export default function Home() {
     searchSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function submitSearch(nextQuery?: string, nextType?: SearchType) {
+  async function submitSearch(nextQuery?: string, nextType?: SearchType) {
     const value = (nextQuery ?? query).trim();
     if (!value) {
       toast.error("Enter a symptom, illness, or medicine to begin.");
       return;
     }
+    const kind = (nextType ?? searchType) as SearchType;
     setSubmittedQuery(value);
-    setSearchType(nextType ?? searchType);
+    setSearchType(kind);
     setHasSearched(true);
+    setMedo(null);
+    setMedoError(null);
+
+    await fetchMedo(value, kind, viewer, ageBand);
+
     window.setTimeout(() => {
       document.getElementById("search-result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 60);
+  }
+
+  async function fetchMedo(
+    value: string,
+    kind: SearchType,
+    viewerValue: "me" | "someone",
+    age: string | null,
+  ) {
+    setMedoLoading(true);
+    try {
+      const data = await apiLinker.consultMedo({
+        symptoms: value,
+        searchType: kind,
+        viewer: viewerValue,
+        ageBand: age || "Not specified",
+      });
+      setMedo(data.response);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error reaching Medo.";
+      setMedoError(msg);
+      toast.error(msg);
+    } finally {
+      setMedoLoading(false);
+    }
+  }
+
+  function renderMedoPanel() {
+    if (medoLoading) {
+      return (
+        <div className="medo-panel medo-loading" aria-live="polite">
+          <Loader2 size={18} className="medo-spin" aria-hidden="true" />
+          <p>Medo is reviewing the symptoms…</p>
+        </div>
+      );
+    }
+    if (medoError) {
+      return (
+        <div className="medo-panel medo-error" role="alert">
+          <ShieldAlert size={18} aria-hidden="true" />
+          <div>
+            <p className="medo-title">Medo is unavailable</p>
+            <p>{medoError}</p>
+          </div>
+        </div>
+      );
+    }
+    if (!medo) return null;
+
+    return (
+      <div className="medo-panel" aria-live="polite">
+        <div className="medo-panel-head">
+          <div className="medo-badge">
+            <Stethoscope size={16} aria-hidden="true" />
+            <span>Medo · {medo.agent.speciality}</span>
+          </div>
+          <span className={`medo-severity medo-severity-${medo.severity}`}>{medo.severity.toUpperCase()}</span>
+        </div>
+        <h4 className="medo-condition">{medo.condition}</h4>
+        <p className="medo-summary">{medo.summary}</p>
+
+        {medo.selfCare.length > 0 && (
+          <section className="medo-block">
+            <h5>Self care</h5>
+            <ul>{medo.selfCare.map((item) => <li key={item}>{item}</li>)}</ul>
+          </section>
+        )}
+
+        {medo.medicines.length > 0 && (
+          <section className="medo-block">
+            <h5><Pill size={15} aria-hidden="true" /> Suggested medicines</h5>
+            <div className="medo-medicine-grid">
+              {medo.medicines.map((m) => (
+                <article className="medo-medicine-card" key={`${m.name}-${m.category}`}>
+                  <header>
+                    <span className="medo-medicine-name">{m.name}</span>
+                    <span className="medo-medicine-category">{m.category}</span>
+                  </header>
+                  <p><b>Purpose:</b> {m.purpose}</p>
+                  <p><b>Typical adult dose:</b> {m.dosage}</p>
+                  {m.warnings.length > 0 && (
+                    <p><b>Warnings:</b> {m.warnings.join("; ")}</p>
+                  )}
+                  {m.interactions.length > 0 && (
+                    <p><b>Interactions:</b> {m.interactions.join(", ")}</p>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {medo.whenToSeekHelp.length > 0 && (
+          <section className="medo-block">
+            <h5>When to seek help</h5>
+            <ul>{medo.whenToSeekHelp.map((item) => <li key={item}>{item}</li>)}</ul>
+          </section>
+        )}
+
+        {medo.redFlags.length > 0 && (
+          <section className="medo-block medo-redflags">
+            <h5><Siren size={15} aria-hidden="true" /> Red flags</h5>
+            <ul>{medo.redFlags.map((item) => <li key={item}>{item}</li>)}</ul>
+          </section>
+        )}
+
+        <footer className="medo-footer">
+          <span>Created by {medo.agent.createdBy} · {medo.agent.createdOn}</span>
+          <p>{medo.disclaimer}</p>
+        </footer>
+      </div>
+    );
   }
 
   function chooseExample(item: (typeof examples)[number]) {
@@ -406,9 +554,12 @@ export default function Home() {
                         <span><b>Active ingredient</b>{result.activeIngredient}</span>
                       </div>
                     )}
-                    <button className="secondary-button" type="button" onClick={() => showUnavailableFeature(ageBand ? "Full safety check" : "Age-sensitive safety check")}>Review safety notes <ArrowRight size={16} /></button>
+                    <button className="secondary-button" type="button" onClick={() => {
+                      if (submittedQuery) fetchMedo(submittedQuery, searchType, viewer, ageBand);
+                    }}>Update information<ArrowRight size={16} /></button>
                     <p className="guidance-fineprint">If you are unsure about age, pregnancy, allergies, conditions, or other medicines, speak with a pharmacist before using a medicine.</p>
                   </div>
+                  {renderMedoPanel()}
                 </div>
               ) : (
                 <div className="fallback-result">
@@ -416,9 +567,10 @@ export default function Home() {
                   <div>
                     <p className="eyebrow"><span /> WE COULDN’T CONFIRM A MATCH</p>
                     <h3>Let’s keep this careful.</h3>
-                    <p>We do not have reviewed information for “{submittedQuery}” in this release. Try a simpler term, check the medicine label, or speak with a pharmacist or clinician.</p>
+                    <p>We do not have reviewed information for “{submittedQuery}” in this release. Medo, our AI doctor, can still offer educational guidance below.</p>
                   </div>
                   <button className="secondary-button" type="button" onClick={() => showUnavailableFeature("Pharmacist support")}>Talk to a pharmacist <ArrowRight size={16} /></button>
+                  {renderMedoPanel()}
                 </div>
               )}
             </div>

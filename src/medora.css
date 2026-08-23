@@ -100,4 +100,39 @@
 
 .feedback-dialog { color: #07427f; background: #fbffff; box-shadow: 10px 12px 0 rgba(4, 75, 137, .16); }.feedback-dialog > p:not(.eyebrow) { color: #3b6e87; }.dialog-close { border-color: #a8d0d6; color: #07558f; }.feedback-dialog textarea { border-color: #9ecad2; color: #07427f; background: #ffffff; outline-color: #10bfb2; }
 
+.medo-panel { grid-column: 1 / -1; margin-top: 18px; padding: 22px 24px; background: linear-gradient(135deg, #fbffff, #eefbff); border: 1px solid rgba(6, 89, 165, .18); border-left: 5px solid #0dbbad; border-radius: 14px; box-shadow: 8px 10px 0 rgba(7, 102, 176, .08); color: #07427f; display: flex; flex-direction: column; gap: 14px; }
+.medo-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.medo-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #07427f; color: #d8f8f8; border-radius: 999px; font-size: 12px; letter-spacing: .04em; font-weight: 600; }
+.medo-severity { font-size: 11px; letter-spacing: .12em; font-weight: 700; padding: 5px 10px; border-radius: 6px; }
+.medo-severity-mild { background: #d8f8f0; color: #066c63; }
+.medo-severity-moderate { background: #fff2d9; color: #8a5400; }
+.medo-severity-severe { background: #ffe0d6; color: #9a2a13; }
+.medo-severity-urgent { background: #ffd6d6; color: #8a0d0d; }
+.medo-condition { font-family: 'Georgia', 'Times New Roman', serif; font-size: 28px; color: #053777; margin: 0; }
+.medo-summary { color: #2c5878; font-size: 15px; line-height: 1.55; margin: 0; }
+.medo-block { border-top: 1px dashed rgba(6, 89, 165, .22); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.medo-block h5 { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #07558f; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+.medo-block ul { margin: 0; padding-left: 18px; color: #2c5878; }
+.medo-block li { margin: 4px 0; }
+.medo-medicine-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.medo-medicine-card { background: #ffffff; border: 1px solid rgba(6, 89, 165, .18); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 4px 6px 0 rgba(7, 102, 176, .06); }
+.medo-medicine-card header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.medo-medicine-name { font-weight: 700; color: #053777; }
+.medo-medicine-category { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #0b92a5; }
+.medo-medicine-card p { margin: 0; color: #2c5878; font-size: 13px; line-height: 1.5; }
+.medo-medicine-card b { color: #07558f; }
+.medo-redflags h5 { color: #9a2a13; }
+.medo-redflags ul { color: #8a2a18; }
+.medo-footer { border-top: 1px dashed rgba(6, 89, 165, .22); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.medo-footer span { font-size: 12px; color: #0b92a5; letter-spacing: .04em; }
+.medo-footer p { margin: 0; font-size: 12px; color: #4a6e85; }
+.medo-loading { flex-direction: row; align-items: center; gap: 10px; color: #07558f; }
+.medo-loading p { margin: 0; font-size: 14px; }
+.medo-spin { animation: medo-spin 1s linear infinite; color: #0dbbad; }
+.medo-error { flex-direction: row; align-items: flex-start; gap: 10px; border-left-color: #c33; background: #fff5f5; color: #8a1f1f; }
+.medo-error p { margin: 0; }
+.medo-error .medo-title { font-weight: 700; }
+@keyframes medo-spin { to { transform: rotate(360deg); } }
+@media (max-width: 720px) { .medo-condition { font-size: 22px; } .medo-panel { padding: 18px; } }
+
 @media (max-width:720px) { .brand-lockup.medora-brand img { width: 142px; height: 46px; }.caresearch-shell::after { top: 95px; right: -260px; width: 440px; height: 440px; }.medora-hero-art { min-height: 300px; }.hero-clinical-card { width: 90%; padding: 11px; }.hero-clinical-card img { width: 58%; }.clinical-card-meta b { font-size: 16px; }.ring-one { width:310px; height:310px; }.ring-two { width:390px; height:390px; }.medora-hero-art .orbit-note-one { left:0; top:10px; }.medora-hero-art .orbit-note-two { right:0; bottom:10px; } }
