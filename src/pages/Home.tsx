@@ -207,9 +207,7 @@ export default function Home() {
   const searchSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (window.localStorage.getItem("medora-dev-credit-seen") !== "true") {
-      setWelcomeOpen(true);
-    }
+    setWelcomeOpen(true);
   }, []);
 
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
@@ -688,7 +686,7 @@ export default function Home() {
       )}
 
       {welcomeOpen && (
-        <div className="dev-credit-backdrop" role="presentation" onMouseDown={() => { setWelcomeOpen(false); window.localStorage.setItem("medora-dev-credit-seen", "true"); }}>
+        <div className="dev-credit-backdrop" role="presentation" onMouseDown={() => setWelcomeOpen(false)}>
           <section
             className="dev-credit-dialog"
             role="dialog"
@@ -718,7 +716,7 @@ export default function Home() {
             <button
               className="primary-button dev-credit-cta"
               type="button"
-              onClick={() => { setWelcomeOpen(false); window.localStorage.setItem("medora-dev-credit-seen", "true"); }}
+              onClick={() => setWelcomeOpen(false)}
             >
               Got it, continue <ArrowRight size={17} aria-hidden="true" />
             </button>
