@@ -2,7 +2,7 @@
 
 > **Your trusted companion for safer medicine & symptom discovery.**
 
-Medora is a clean, clinical-grade search interface that helps people look up **symptoms**, **illnesses**, and **medicines** — and choose a safer next step. Built with care for clarity, accessibility, and trust..
+Medora is a clean, clinical-grade search interface that helps people look up **symptoms**, **illnesses**, and **medicines** — and choose a safer next step. Built with care for clarity, accessibility, and trust by agents.
 
 ---
 
