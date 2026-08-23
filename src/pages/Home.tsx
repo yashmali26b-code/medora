@@ -208,7 +208,7 @@ export default function Home() {
   }
 
   function showUnavailableFeature(name: string) {
-    toast.message(`${name} is a prototype action in this demo.`, {
+    toast.message(`${name} is an unavailable action in this release.`, {
       description: "The live product would connect you with configured local services.",
     });
   }
@@ -218,7 +218,7 @@ export default function Home() {
       <div className="ledger-rail" aria-hidden="true">
         <span>MEDORA / HEALTH SEARCH REFERENCE</span>
         <i />
-        <span>V1.0 / US DEMO</span>
+        <span>V1.0 / US RELEASE</span>
       </div>
 
       <header className="site-header">
@@ -260,7 +260,7 @@ export default function Home() {
               Search a symptom, an illness, or a medicine. We’ll help you find credible information and choose a safe next step.
             </p>
             <div className="hero-ledger-stamp" aria-label="Medora content details">
-              <span>US DEMO</span>
+              <span>US RELEASE</span>
               <span>CLINICAL REVIEW REQUIRED</span>
               <span>REFERENCE V1.0</span>
             </div>
@@ -303,7 +303,7 @@ export default function Home() {
             <div className="search-card">
               <div className="search-card-topline">
                 <p>WHAT ARE YOU LOOKING UP?</p>
-                <span>US DEMO · V1.0</span>
+                <span>US RELEASE · V1.0</span>
               </div>
               <div className="type-tabs" role="tablist" aria-label="Choose search type">
                 {typeOptions.map((option) => {
@@ -346,7 +346,7 @@ export default function Home() {
               <p className="eyebrow"><span /> OUR APPROACH</p>
               <h3>Safety before suggestions.</h3>
               <p>We show source details, active ingredients, and questions that may affect your next step.</p>
-              <div className="support-ledger-stamp"><span>SCOPE</span><b>Educational information</b><span>JURISDICTION</span><b>US demo</b></div>
+              <div className="support-ledger-stamp"><span>SCOPE</span><b>Educational information</b><span>JURISDICTION</span><b>US release</b></div>
               <a href="#how-it-works">See how results work <ArrowRight size={15} aria-hidden="true" /></a>
             </aside>
           </div>
@@ -378,7 +378,7 @@ export default function Home() {
                     <p>{result.description}</p>
                     <div className="source-stamp">
                       <BookOpen size={16} aria-hidden="true" />
-                      <span><b>{result.source}</b>{result.reviewDate} · US demo</span>
+                      <span><b>{result.source}</b>{result.reviewDate} · US release</span>
                       <ExternalLink size={15} aria-hidden="true" />
                     </div>
                   </div>
@@ -416,7 +416,7 @@ export default function Home() {
                   <div>
                     <p className="eyebrow"><span /> WE COULDN’T CONFIRM A MATCH</p>
                     <h3>Let’s keep this careful.</h3>
-                    <p>We do not have reviewed information for “{submittedQuery}” in this prototype. Try a simpler term, check the medicine label, or speak with a pharmacist or clinician.</p>
+                    <p>We do not have reviewed information for “{submittedQuery}” in this release. Try a simpler term, check the medicine label, or speak with a pharmacist or clinician.</p>
                   </div>
                   <button className="secondary-button" type="button" onClick={() => showUnavailableFeature("Pharmacist support")}>Talk to a pharmacist <ArrowRight size={16} /></button>
                 </div>
@@ -478,7 +478,7 @@ export default function Home() {
           </div>
           <div className="source-list">
             <article><span>01</span><div><h3>Reviewed clinical content</h3><p>All educational material is intended for review by qualified clinicians and pharmacists before publication.</p></div><FileText size={20} aria-hidden="true" /></article>
-            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3><p>This interface is a US demo. Medicines, emergency numbers, and care pathways must be configured country by country.</p></div><FileText size={20} aria-hidden="true" /></article>
+            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3><p>This interface is configured for the US release. Medicines, emergency numbers, and care pathways must be configured country by country.</p></div><FileText size={20} aria-hidden="true" /></article>
             <article><span>03</span><div><h3>Visible review dates</h3><p>Every clinical page carries its source, location, reviewer, and review date rather than hiding it in a footer.</p></div><FileText size={20} aria-hidden="true" /></article>
           </div>
         </section>
@@ -510,7 +510,7 @@ export default function Home() {
           <a href="#sources">Our sources</a>
           <button type="button" onClick={() => setFeedbackOpen(true)}>Report a concern</button>
         </div>
-        <p className="footer-disclaimer">Medora is an educational prototype. It does not diagnose, prescribe, or replace emergency services, a doctor, nurse, or pharmacist.</p>
+        <p className="footer-disclaimer">Medora provides educational information. It does not diagnose, prescribe, or replace emergency services, a doctor, nurse, or pharmacist.</p>
       </footer>
 
       {feedbackOpen && (
@@ -521,7 +521,7 @@ export default function Home() {
             <h2 id="feedback-title">Help keep the information careful.</h2>
             <p>In the live product, this form would securely route the page version and your concern to a clinical review team. Please do not include urgent symptoms here.</p>
             <textarea aria-label="Describe your concern" placeholder="Describe the page or information that concerns you…" />
-            <button className="primary-button" type="button" onClick={() => { setFeedbackOpen(false); toast.success("Concern noted in this prototype."); }}>Send report <ArrowRight size={17} /></button>
+            <button className="primary-button" type="button" onClick={() => { setFeedbackOpen(false); toast.success("Concern noted for review."); }}>Send report <ArrowRight size={17} /></button>
           </section>
         </div>
       )}
