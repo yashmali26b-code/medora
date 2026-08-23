@@ -73,7 +73,7 @@ Medora is a thoughtfully designed web app that delivers carefully sourced medica
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/medora.git
+git clone https://github.com/yashmali26b-code/medora.git
 
 # Navigate into the project
 cd medora
