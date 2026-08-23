@@ -231,8 +231,8 @@ export default function Home() {
 
       <header className="site-header">
         <a className="brand-lockup medora-brand" href="#top" aria-label="Medora home">
-          <img src="/manus-storage/medora-wordmark-refresh_febdb2c0.png" alt="Medora" />
-          <span className="sr-only">Medora</span>
+          <img src="./src/assets/name.jpeg" alt="" />
+          <span className="sr-only"></span>
         </a>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
@@ -284,12 +284,8 @@ export default function Home() {
             <span className="medora-lens-ring ring-two" aria-hidden="true" />
             <div className="hero-clinical-card">
               <div className="clinical-card-topline"><span>MEDORA SEARCH INDEX</span><span>V1.0</span></div>
-              <img src="/manus-storage/medora-mark_bf5be9f3.png" alt="Medora magnifier and M mark" />
+              <img src="./src/assets/logo.jpeg" alt="Medora magnifier and M mark" />
               <div className="clinical-card-meta"><b>Search. Find. Feel Better.</b><span>Symptom · Illness · Medicine</span></div>
-            </div>
-            <div className="hero-art-caption">
-              <span>CONTENT TYPE / REFERENCE GUIDE</span>
-              <b>Information, not a diagnosis.</b>
             </div>
             <div className="orbit-note orbit-note-one">Reviewed content</div>
             <div className="orbit-note orbit-note-two">Clinical search</div>
