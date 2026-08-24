@@ -252,6 +252,17 @@ export default function Home() {
     };
   }, [closeMenu]);
 
+  useEffect(() => {
+    const isLocked = welcomeOpen || feedbackOpen || menuOpen || menuClosing;
+    if (isLocked) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [welcomeOpen, feedbackOpen, menuOpen, menuClosing]);
+
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
   const isEmergency = emergencyTerms.some((term) => normalizedQuery.includes(term));
   const result = resultLibrary[normalizedQuery];
