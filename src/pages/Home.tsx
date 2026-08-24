@@ -19,7 +19,6 @@ import {
   FileText,
   Github,
   HeartPulse,
-  Info,
   LifeBuoy,
   Loader2,
   MapPin,
@@ -585,7 +584,6 @@ export default function Home() {
                 Nearby medical store <ArrowUpRight size={15} className="nearby-store-ext" aria-hidden="true" />
               </button>
             </div>
-            <p className="hero-note"><Info size={15} aria-hidden="true" /></p>
           </div>
           <div className="hero-art medora-hero-art" aria-label="Medora clinical search reference illustration">
             <span className="medora-lens-ring ring-one" aria-hidden="true" />
