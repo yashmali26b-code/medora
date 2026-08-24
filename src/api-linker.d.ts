@@ -99,6 +99,7 @@ export type NearbyResponse = {
   query?: string | null;
   radiusMeters?: number | null;
   origin?: { lat: number; lng: number } | null;
+  originAddress?: string | null;
   count: number;
   places: NearbyPlace[];
   fetchedAt?: string | null | undefined;
