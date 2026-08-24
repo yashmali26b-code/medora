@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileText,
+  Github,
   HeartPulse,
   Info,
   LifeBuoy,
@@ -713,13 +714,25 @@ export default function Home() {
               <span>EDITION</span>
               <b>Medora V1.0</b>
             </div>
-            <button
-              className="primary-button dev-credit-cta"
-              type="button"
-              onClick={() => setWelcomeOpen(false)}
-            >
-              Got it, continue <ArrowRight size={17} aria-hidden="true" />
-            </button>
+            <div className="dev-credit-actions">
+              <a
+                href="https://github.com/yashmali26b-code/medora.git"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dev-credit-github-btn"
+              >
+                <Github size={17} aria-hidden="true" />
+                <span>Contribute on GitHub</span>
+                <ArrowUpRight size={15} className="dev-credit-ext" aria-hidden="true" />
+              </a>
+              <button
+                className="primary-button dev-credit-cta"
+                type="button"
+                onClick={() => setWelcomeOpen(false)}
+              >
+                Got it, continue <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
           </section>
         </div>
       )}
