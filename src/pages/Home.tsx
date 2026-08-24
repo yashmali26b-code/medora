@@ -2,7 +2,7 @@
  * Medora style reminder — cobalt-and-aqua clinical search, clean white data surfaces,
  * and the supplied magnifier-and-M identity as the signature motif.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import logoMark from "../assets/logo.jpeg";
 import nameMark from "../assets/name.jpeg";
 import "../medora.css";
@@ -21,6 +21,7 @@ import {
   Info,
   LifeBuoy,
   Loader2,
+  Menu,
   Pill,
   Search,
   ShieldAlert,
@@ -201,15 +202,55 @@ export default function Home() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuClosing, setMenuClosing] = useState(false);
   const [medo, setMedo] = useState<MedoResponse | null>(null);
   const [medoLoading, setMedoLoading] = useState(false);
   const [medoError, setMedoError] = useState<string | null>(null);
   const [medoRenderKey, setMedoRenderKey] = useState(0);
   const searchSectionRef = useRef<HTMLElement>(null);
 
+  const closeMenu = useCallback(() => {
+    if (!menuOpen || menuClosing) return;
+    setMenuClosing(true);
+    setTimeout(() => {
+      setMenuOpen(false);
+      setMenuClosing(false);
+    }, 220);
+  }, [menuOpen, menuClosing]);
+
+  const toggleMenu = useCallback(() => {
+    if (menuOpen) {
+      closeMenu();
+    } else {
+      setMenuOpen(true);
+    }
+  }, [menuOpen, closeMenu]);
+
   useEffect(() => {
     setWelcomeOpen(true);
   }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeMenu();
+        setFeedbackOpen(false);
+        setWelcomeOpen(false);
+      }
+    }
+    function handleResize() {
+      if (window.innerWidth > 980) {
+        setMenuOpen(false);
+        setMenuClosing(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [closeMenu]);
 
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
   const isEmergency = emergencyTerms.some((term) => normalizedQuery.includes(term));
@@ -377,10 +418,18 @@ export default function Home() {
         <span>V1.0 / US RELEASE</span>
       </div>
 
+      {(menuOpen || menuClosing) && (
+        <div
+          className={`mobile-menu-backdrop ${menuClosing ? "closing" : ""}`}
+          role="presentation"
+          onClick={closeMenu}
+        />
+      )}
+
       <header className="site-header">
         <a className="brand-lockup medora-brand" href="#top" aria-label="Medora home">
-          <img src={nameMark} alt="" />
-          <span className="sr-only"></span>
+          <img src={nameMark} alt="Medora" />
+          <span className="sr-only">Medora</span>
         </a>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
@@ -394,15 +443,73 @@ export default function Home() {
           <button className="header-help" type="button" onClick={() => showUnavailableFeature("Help centre")}>
             <CircleHelp size={17} aria-hidden="true" /> <span>Help</span>
           </button>
-          <button className="mobile-menu-button" type="button" aria-label="Toggle menu" onClick={() => setMenuOpen((open) => !open)}>
-            {menuOpen ? <X size={22} /> : <span className="menu-lines" />}
+          <button
+            className={`mobile-menu-button ${menuOpen && !menuClosing ? "active" : ""}`}
+            type="button"
+            aria-label={menuOpen && !menuClosing ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={menuOpen && !menuClosing}
+            onClick={toggleMenu}
+          >
+            {menuOpen && !menuClosing ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-        {menuOpen && (
-          <div className="mobile-menu">
-            <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-            <a href="#medicine-info" onClick={() => setMenuOpen(false)}>Medicine information</a>
-            <a href="#sources" onClick={() => setMenuOpen(false)}>Our sources</a>
+        {(menuOpen || menuClosing) && (
+          <div className={`mobile-menu ${menuClosing ? "closing" : ""}`}>
+            <div className="mobile-menu-topline">
+              <span className="mobile-menu-dot" aria-hidden="true" />
+              <span>EXPLORE MEDORA</span>
+              <span>V1.0 · US RELEASE</span>
+            </div>
+            <nav className="mobile-nav-links" aria-label="Mobile primary navigation">
+              <a href="#how-it-works" onClick={closeMenu}>
+                <div className="mobile-nav-item-left">
+                  <span className="mobile-nav-index">01</span>
+                  <BookOpen size={16} className="mobile-nav-icon" aria-hidden="true" />
+                  <span className="mobile-nav-title">How it works</span>
+                </div>
+                <ArrowRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
+              </a>
+              <a href="#medicine-info" onClick={closeMenu}>
+                <div className="mobile-nav-item-left">
+                  <span className="mobile-nav-index">02</span>
+                  <Pill size={16} className="mobile-nav-icon" aria-hidden="true" />
+                  <span className="mobile-nav-title">Medicine information</span>
+                </div>
+                <ArrowRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
+              </a>
+              <a href="#sources" onClick={closeMenu}>
+                <div className="mobile-nav-item-left">
+                  <span className="mobile-nav-index">03</span>
+                  <FileText size={16} className="mobile-nav-icon" aria-hidden="true" />
+                  <span className="mobile-nav-title">Our sources</span>
+                </div>
+                <ArrowRight size={15} className="mobile-nav-arrow" aria-hidden="true" />
+              </a>
+            </nav>
+            <div className="mobile-menu-footer">
+              <button
+                type="button"
+                className="mobile-menu-action"
+                onClick={() => {
+                  closeMenu();
+                  showUnavailableFeature("Language selection");
+                }}
+              >
+                <span>Language</span>
+                <b>EN <ChevronDown size={13} aria-hidden="true" /></b>
+              </button>
+              <button
+                type="button"
+                className="mobile-menu-action"
+                onClick={() => {
+                  closeMenu();
+                  showUnavailableFeature("Help centre");
+                }}
+              >
+                <CircleHelp size={16} aria-hidden="true" />
+                <span>Help Centre</span>
+              </button>
+            </div>
           </div>
         )}
       </header>
