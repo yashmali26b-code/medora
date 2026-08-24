@@ -448,12 +448,12 @@
     display: block;
     position: fixed;
     inset: 0;
-    top: 68px;
     z-index: 90;
     background: rgba(16, 44, 45, 0.45);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     animation: mobile-backdrop-fade-in 0.22s var(--ease-out) forwards;
+    touch-action: none;
   }
 
   .mobile-menu-backdrop.closing {
@@ -487,8 +487,8 @@
   }
 
   .mobile-menu {
-    position: fixed !important;
-    top: 68px !important;
+    position: absolute !important;
+    top: 100% !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
