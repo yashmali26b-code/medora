@@ -252,6 +252,20 @@ export default function Home() {
     };
   }, [closeMenu]);
 
+  useEffect(() => {
+    const isOverlayOpen = welcomeOpen || feedbackOpen || menuOpen;
+    if (isOverlayOpen) {
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+      };
+    }
+  }, [welcomeOpen, feedbackOpen, menuOpen]);
+
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
   const isEmergency = emergencyTerms.some((term) => normalizedQuery.includes(term));
   const result = resultLibrary[normalizedQuery];
