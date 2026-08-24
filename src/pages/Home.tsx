@@ -885,7 +885,6 @@ export default function Home() {
             <div className="dev-credit-stamp">
               <span>DEVELOPER</span>
               <b>Yash Mali</b>
-              <span>EDITION</span>
             </div>
             <div className="dev-credit-actions">
               <a
