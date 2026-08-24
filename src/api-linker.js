@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_URL = "medora-backend-production-ec0e.up.railway.app";
+const DEFAULT_BACKEND_URL = "https://medora-backend-production-ec0e.up.railway.app";
 
 const ENV_URL =
   typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BACKEND_URL
