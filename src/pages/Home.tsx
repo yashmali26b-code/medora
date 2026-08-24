@@ -3,9 +3,10 @@
  * and the supplied magnifier-and-M identity as the signature motif.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logoMark from "../assets/logo.jpeg";
 import nameMark from "../assets/name.jpeg";
-import "../medora.css";
+import NearbyPopup from "../components/NearbyPopup";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -21,6 +22,7 @@ import {
   Info,
   LifeBuoy,
   Loader2,
+  MapPin,
   Menu,
   Pill,
   Search,
@@ -193,6 +195,7 @@ function normalizeQuery(query: string): string {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const [searchType, setSearchType] = useState<SearchType>("symptom");
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
@@ -201,13 +204,48 @@ export default function Home() {
   const [viewer, setViewer] = useState<"me" | "someone">("me");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [nearbyOpen, setNearbyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
   const [medo, setMedo] = useState<MedoResponse | null>(null);
   const [medoLoading, setMedoLoading] = useState(false);
   const [medoError, setMedoError] = useState<string | null>(null);
   const [medoRenderKey, setMedoRenderKey] = useState(0);
+  const [statusWord, setStatusWord] = useState<string | null>(null);
+  const [statusDone, setStatusDone] = useState(false);
   const searchSectionRef = useRef<HTMLElement>(null);
+
+  // Cycle through short Claude-style execution words while a search is running.
+  useEffect(() => {
+    if (!medoLoading) return;
+    const words = [
+      "Reading your question",
+      "Checking medical sources",
+      "Looking up safety context",
+      "Drafting an answer",
+    ];
+    let i = 0;
+    setStatusWord(words[0]);
+    setStatusDone(false);
+    const id = window.setInterval(() => {
+      i = (i + 1) % words.length;
+      setStatusWord(words[i]);
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [medoLoading]);
+
+  // When the result lands, flash a brief "We found something" then fade it out.
+  useEffect(() => {
+    if (medoLoading) return;
+    if (!medo && !medoError) return;
+    setStatusWord("We found something");
+    setStatusDone(true);
+    const id = window.setTimeout(() => {
+      setStatusWord(null);
+      setStatusDone(false);
+    }, 2400);
+    return () => window.clearTimeout(id);
+  }, [medoLoading, medo, medoError]);
 
   const closeMenu = useCallback(() => {
     if (!menuOpen || menuClosing) return;
@@ -253,7 +291,7 @@ export default function Home() {
   }, [closeMenu]);
 
   useEffect(() => {
-    const isModalOpen = welcomeOpen || feedbackOpen;
+    const isModalOpen = welcomeOpen || feedbackOpen || nearbyOpen;
     if (isModalOpen) {
       const originalBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
@@ -261,7 +299,7 @@ export default function Home() {
         document.body.style.overflow = originalBodyOverflow;
       };
     }
-  }, [welcomeOpen, feedbackOpen]);
+  }, [welcomeOpen, feedbackOpen, nearbyOpen]);
 
   const normalizedQuery = useMemo(() => normalizeQuery(submittedQuery), [submittedQuery]);
   const isEmergency = emergencyTerms.some((term) => normalizedQuery.includes(term));
@@ -426,7 +464,6 @@ export default function Home() {
       <div className="ledger-rail" aria-hidden="true">
         <span>MEDORA / HEALTH SEARCH REFERENCE</span>
         <i />
-        <span>V1.0 / US RELEASE</span>
       </div>
 
       {(menuOpen || menuClosing) && (
@@ -469,7 +506,6 @@ export default function Home() {
             <div className="mobile-menu-topline">
               <span className="mobile-menu-dot" aria-hidden="true" />
               <span>EXPLORE MEDORA</span>
-              <span>V1.0 · US RELEASE</span>
             </div>
             <nav className="mobile-nav-links" aria-label="Mobile primary navigation">
               <a href="#how-it-works" onClick={closeMenu}>
@@ -534,20 +570,28 @@ export default function Home() {
               Search a symptom, an illness, or a medicine. We’ll help you find credible information and choose a safe next step.
             </p>
             <div className="hero-ledger-stamp" aria-label="Medora content details">
-              <span>US RELEASE</span>
               <span>CLINICAL REVIEW REQUIRED</span>
-              <span>REFERENCE V1.0</span>
             </div>
-            <button className="primary-button" type="button" onClick={scrollToSearch}>
-              Search health information <ArrowRight size={18} aria-hidden="true" />
-            </button>
+            <div className="hero-actions">
+              <button className="primary-button" type="button" onClick={scrollToSearch}>
+                Search health information <ArrowRight size={18} aria-hidden="true" />
+              </button>
+              <button
+                className="nearby-store-button"
+                type="button"
+                onClick={() => setNearbyOpen(true)}
+              >
+                <MapPin size={18} aria-hidden="true" />
+                Nearby medical store <ArrowUpRight size={15} className="nearby-store-ext" aria-hidden="true" />
+              </button>
+            </div>
             <p className="hero-note"><Info size={15} aria-hidden="true" /> Medora does not diagnose or prescribe.</p>
           </div>
           <div className="hero-art medora-hero-art" aria-label="Medora clinical search reference illustration">
             <span className="medora-lens-ring ring-one" aria-hidden="true" />
             <span className="medora-lens-ring ring-two" aria-hidden="true" />
             <div className="hero-clinical-card">
-              <div className="clinical-card-topline"><span>MEDORA SEARCH INDEX</span><span>V1.0</span></div>
+              <div className="clinical-card-topline"><span>MEDORA SEARCH INDEX</span></div>
               <img src={logoMark} alt="Medora magnifier and M mark" />
               <div className="clinical-card-meta"><b>Search. Find. Feel Better.</b><span>Symptom · Illness · Medicine</span></div>
             </div>
@@ -577,7 +621,6 @@ export default function Home() {
             <div className="search-card">
               <div className="search-card-topline">
                 <p>WHAT ARE YOU LOOKING UP?</p>
-                <span>US RELEASE · V1.0</span>
               </div>
               <div className="type-tabs" role="tablist" aria-label="Choose search type">
                 {typeOptions.map((option) => {
@@ -605,7 +648,9 @@ export default function Home() {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={placeholder}
                 />
-                <button type="submit" aria-label="Search"><ArrowRight size={21} /></button>
+                <button type="submit" aria-label={medoLoading ? "Searching" : "Search"}>
+                  {medoLoading ? <span className="search-btn-loader" aria-hidden="true" /> : <ArrowRight size={21} />}
+                </button>
               </form>
               <div className="example-row">
                 <span>TRY AN EXAMPLE</span>
@@ -613,17 +658,29 @@ export default function Home() {
                   <button type="button" key={item.label} onClick={() => chooseExample(item)}>{item.label}</button>
                 ))}
               </div>
-              <p className="disclaimer"><ShieldAlert size={15} aria-hidden="true" /> Results are for general information. They do not confirm a condition or replace a healthcare professional.</p>
+              <p className="disclaimer">Medora provides educational information. It is not a diagnosis.</p>
             </div>
             <aside className="search-support-card">
               <div className="support-icon"><ClipboardCheck size={21} aria-hidden="true" /></div>
               <p className="eyebrow"><span /> OUR APPROACH</p>
               <h3>Safety before suggestions.</h3>
               <p>We show source details, active ingredients, and questions that may affect your next step.</p>
-              <div className="support-ledger-stamp"><span>SCOPE</span><b>Educational information</b><span>JURISDICTION</span><b>US release</b></div>
+              <div className="support-ledger-stamp"><span>SCOPE</span><b>Educational information</b><span>JURISDICTION</span></div>
               <a href="#how-it-works">See how results work <ArrowRight size={15} aria-hidden="true" /></a>
             </aside>
           </div>
+
+          {hasSearched && statusWord && (
+            <div className={`search-status ${statusDone ? "is-done" : "is-running"}`} role="status" aria-live="polite">
+              {statusDone ? (
+                <Check size={15} aria-hidden="true" />
+              ) : (
+                <span className="search-status-loader" aria-hidden="true" />
+              )}
+              <span key={statusWord} className="search-status-word">{statusWord}</span>
+              <span className="search-status-dots" aria-hidden="true" />
+            </div>
+          )}
 
           {hasSearched && (
             <div id="search-result" className="result-area" aria-live="polite">
@@ -652,7 +709,7 @@ export default function Home() {
                     <p>{result.description}</p>
                     <div className="source-stamp">
                       <BookOpen size={16} aria-hidden="true" />
-                      <span><b>{result.source}</b>{result.reviewDate} · US release</span>
+                      <span><b>{result.source}</b>{result.reviewDate}</span>
                       <ExternalLink size={15} aria-hidden="true" />
                     </div>
                   </div>
@@ -756,7 +813,7 @@ export default function Home() {
           </div>
           <div className="source-list">
             <article><span>01</span><div><h3>Reviewed clinical content</h3><p>All educational material is intended for review by qualified clinicians and pharmacists before publication.</p></div><FileText size={20} aria-hidden="true" /></article>
-            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3><p>This interface is configured for the US release. Medicines, emergency numbers, and care pathways must be configured country by country.</p></div><FileText size={20} aria-hidden="true" /></article>
+            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3></div><FileText size={20} aria-hidden="true" /></article>
             <article><span>03</span><div><h3>Visible review dates</h3><p>Every clinical page carries its source, location, reviewer, and review date rather than hiding it in a footer.</p></div><FileText size={20} aria-hidden="true" /></article>
           </div>
         </section>
@@ -816,7 +873,6 @@ export default function Home() {
             <div className="dev-credit-topline">
               <span className="dev-credit-dot" aria-hidden="true" />
               <span>WELCOME</span>
-              <span>V1.0 · US RELEASE</span>
             </div>
             <p className="eyebrow dev-credit-eyebrow"><span /> A NOTE BEFORE YOU SEARCH</p>
             <h2 id="dev-credit-title">
@@ -830,7 +886,6 @@ export default function Home() {
               <span>DEVELOPER</span>
               <b>Yash Mali</b>
               <span>EDITION</span>
-              <b>Medora V1.0</b>
             </div>
             <div className="dev-credit-actions">
               <a
@@ -854,6 +909,8 @@ export default function Home() {
           </section>
         </div>
       )}
+
+      <NearbyPopup open={nearbyOpen} onClose={() => setNearbyOpen(false)} />
     </div>
   );
 }

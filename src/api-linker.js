@@ -1,4 +1,4 @@
-const DEFAULT_BACKEND_URL = "https://medora-backend-production-ec0e.up.railway.app";
+const DEFAULT_BACKEND_URL = "http://localhost:8080";
 
 const ENV_URL =
   typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BACKEND_URL
@@ -99,10 +99,77 @@ export async function consultMedo(payload) {
   };
 }
 
+export async function fetchNearbyMedicals(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.lat !== undefined && params.lat !== null) qs.set("lat", String(params.lat));
+  if (params.lng !== undefined && params.lng !== null) qs.set("lng", String(params.lng));
+  if (params.radius !== undefined && params.radius !== null) qs.set("radius", String(params.radius));
+  if (params.limit !== undefined && params.limit !== null) qs.set("limit", String(params.limit));
+  if (params.query) qs.set("q", String(params.query));
+  if (params.type) qs.set("type", String(params.type));
+  if (params.openNow) qs.set("openNow", "1");
+  if (params.rankBy) qs.set("rankBy", String(params.rankBy));
+
+  const data = await request(`/api/medicals-nearby?${qs.toString()}`);
+  return {
+    ok: Boolean(data && data.ok),
+    intent: data && data.intent ? data.intent : null,
+    intentLabel: data && data.intentLabel ? data.intentLabel : null,
+    mode: data && data.mode ? data.mode : null,
+    query: data && data.query ? data.query : null,
+    radiusMeters: data && typeof data.radiusMeters === "number" ? data.radiusMeters : null,
+    origin: data && data.origin ? data.origin : null,
+    count: data && typeof data.count === "number" ? data.count : 0,
+    places: Array.isArray(data && data.places) ? data.places : [],
+    fetchedAt: data && data.fetchedAt ? data.fetchedAt : null,
+    error: data && !data.ok ? data.error : null,
+  };
+}
+
+export async function fetchMedicalPlaceDetails(placeId) {
+  if (!placeId) return null;
+  const data = await request(`/api/medicals-nearby/details/${encodeURIComponent(placeId)}`);
+  if (!data || !data.ok || !data.place) return null;
+  return data.place;
+}
+
+export async function fetchMedicalsStatus() {
+  try {
+    const data = await request("/api/medicals-nearby/status");
+    return {
+      configured: Boolean(data && data.configured),
+      rateLimit: data && data.rateLimit ? data.rateLimit : null,
+    };
+  } catch (err) {
+    return { configured: false, rateLimit: null };
+  }
+}
+
+export async function fetchMedicalsReverse({ lat, lng } = {}) {
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return { ok: false, error: "missing-coordinates", label: null };
+  }
+  try {
+    const qs = `?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`;
+    const data = await request(`/api/medicals-nearby/reverse${qs}`);
+    if (!data || !data.ok) {
+      return { ok: false, error: (data && data.error) || "reverse-failed", label: null };
+    }
+    return { ok: true, label: data.label || null, lat: data.lat, lng: data.lng };
+  } catch (err) {
+    const message = err && err.message ? err.message : "reverse-failed";
+    return { ok: false, error: message, label: null };
+  }
+}
+
 export const apiLinker = {
   getBackendUrl,
   fetchHealth,
   consultMedo,
+  fetchNearbyMedicals,
+  fetchMedicalPlaceDetails,
+  fetchMedicalsStatus,
+  fetchMedicalsReverse,
 };
 
 export default apiLinker;
