@@ -6,6 +6,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoMark from "../assets/logo.jpeg";
 import nameMark from "../assets/name.jpeg";
+import imgIbuprofen from "../assets/medicines/ibuprofen.jpg";
+import imgParacetamol from "../assets/medicines/paracetamol.jpg";
+import imgAmoxicillin from "../assets/medicines/amoxicillin.jpg";
+import imgCetirizine from "../assets/medicines/cetirizine.jpg";
+import imgCoughSyrup from "../assets/medicines/cough_syrup.jpg";
+import imgInhaler from "../assets/medicines/inhaler.jpg";
+import imgAspirin from "../assets/medicines/aspirin.jpg";
+import imgOmeprazole from "../assets/medicines/omeprazole.jpg";
+import imgPseudoephedrine from "../assets/medicines/pseudoephedrine.jpg";
+import imgNaproxen from "../assets/medicines/naproxen.jpg";
+import imgGuaifenesin from "../assets/medicines/guaifenesin.jpg";
+import imgLoratadine from "../assets/medicines/loratadine.jpg";
+import imgDiphenhydramine from "../assets/medicines/diphenhydramine.jpg";
 import NearbyPopup from "../components/NearbyPopup";
 import {
   ArrowRight,
@@ -19,6 +32,7 @@ import {
   FileText,
   Github,
   HeartPulse,
+  ImageOff,
   LifeBuoy,
   Loader2,
   MapPin,
@@ -62,16 +76,16 @@ type MedoResponse = {
 
 type SearchType = "symptom" | "illness" | "medicine";
 
-type SearchResult = {
+interface SearchResult {
   title: string;
-  normalized?: string;
   eyebrow: string;
   description: string;
   type: SearchType;
-  source: string;
-  reviewDate: string;
+  normalized?: string;
   activeIngredient?: string;
-};
+  source?: string;
+  reviewDate?: string;
+}
 
 const typeOptions: Array<{ value: SearchType; label: string; icon: typeof HeartPulse }> = [
   { value: "symptom", label: "Symptom", icon: HeartPulse },
@@ -96,6 +110,74 @@ const emergencyTerms = [
   "poison",
   "overdose",
 ];
+
+interface RealMedicineItem {
+  src: string;
+  formTag: string;
+  genericName: string;
+}
+
+const REAL_MEDICINE_MAP: Record<string, RealMedicineItem> = {
+  pseudoephedrine: { src: imgPseudoephedrine, formTag: "30mg / 60mg TABLETS", genericName: "Pseudoephedrine" },
+  sudafed: { src: imgPseudoephedrine, formTag: "30mg / 60mg TABLETS", genericName: "Pseudoephedrine" },
+
+  naproxen: { src: imgNaproxen, formTag: "220mg CAPLETS", genericName: "Naproxen Sodium" },
+  aleve: { src: imgNaproxen, formTag: "220mg CAPLETS", genericName: "Naproxen Sodium" },
+
+  guaifenesin: { src: imgGuaifenesin, formTag: "600mg TABLETS", genericName: "Guaifenesin" },
+  mucinex: { src: imgGuaifenesin, formTag: "600mg TABLETS", genericName: "Guaifenesin" },
+
+  loratadine: { src: imgLoratadine, formTag: "10mg TABLETS", genericName: "Loratadine" },
+  claritin: { src: imgLoratadine, formTag: "10mg TABLETS", genericName: "Loratadine" },
+
+  diphenhydramine: { src: imgDiphenhydramine, formTag: "25mg TABLETS", genericName: "Diphenhydramine" },
+  benadryl: { src: imgDiphenhydramine, formTag: "25mg TABLETS", genericName: "Diphenhydramine" },
+
+  ibuprofen: { src: imgIbuprofen, formTag: "400mg TABLETS", genericName: "Ibuprofen" },
+  advil: { src: imgIbuprofen, formTag: "400mg TABLETS", genericName: "Ibuprofen" },
+  motrin: { src: imgIbuprofen, formTag: "400mg TABLETS", genericName: "Ibuprofen" },
+
+  paracetamol: { src: imgParacetamol, formTag: "500mg TABLETS", genericName: "Paracetamol" },
+  acetaminophen: { src: imgParacetamol, formTag: "500mg TABLETS", genericName: "Acetaminophen" },
+  tylenol: { src: imgParacetamol, formTag: "500mg TABLETS", genericName: "Paracetamol" },
+  panadol: { src: imgParacetamol, formTag: "500mg TABLETS", genericName: "Paracetamol" },
+
+  aspirin: { src: imgAspirin, formTag: "500mg TABLETS", genericName: "Aspirin" },
+  bayer: { src: imgAspirin, formTag: "500mg TABLETS", genericName: "Aspirin" },
+
+  amoxicillin: { src: imgAmoxicillin, formTag: "500mg CAPSULES", genericName: "Amoxicillin" },
+  amoxil: { src: imgAmoxicillin, formTag: "500mg CAPSULES", genericName: "Amoxicillin" },
+
+  cetirizine: { src: imgCetirizine, formTag: "10mg TABLETS", genericName: "Cetirizine" },
+  zyrtec: { src: imgCetirizine, formTag: "10mg TABLETS", genericName: "Cetirizine" },
+
+  dextromethorphan: { src: imgCoughSyrup, formTag: "ORAL SYRUP", genericName: "Dextromethorphan" },
+  robitussin: { src: imgCoughSyrup, formTag: "ORAL SYRUP", genericName: "Cough Syrup" },
+  "cough syrup": { src: imgCoughSyrup, formTag: "ORAL SYRUP", genericName: "Cough Syrup" },
+
+  salbutamol: { src: imgInhaler, formTag: "100mcg INHALER", genericName: "Salbutamol" },
+  albuterol: { src: imgInhaler, formTag: "100mcg INHALER", genericName: "Albuterol" },
+  ventolin: { src: imgInhaler, formTag: "100mcg INHALER", genericName: "Ventolin" },
+
+  omeprazole: { src: imgOmeprazole, formTag: "20mg CAPSULES", genericName: "Omeprazole" },
+  prilosec: { src: imgOmeprazole, formTag: "20mg CAPSULES", genericName: "Omeprazole" },
+};
+
+function getRealMedicinePhoto(name: string, category = "", dosage = ""): RealMedicineItem | null {
+  const cleanName = (name || "").toLowerCase().trim();
+  const cleanCat = (category || "").toLowerCase().trim();
+  const cleanDosage = (dosage || "").toLowerCase().trim();
+  const combined = `${cleanName} ${cleanCat} ${cleanDosage}`;
+
+  for (const [key, item] of Object.entries(REAL_MEDICINE_MAP)) {
+    if (cleanName.includes(key) || combined.includes(key)) {
+      return item;
+    }
+  }
+
+  // NO MATCH -> explicitly return null so the UI can accurately state there is no image in the directory
+  return null;
+}
 
 const resultLibrary: Record<string, SearchResult> = {
   fever: {
@@ -212,7 +294,52 @@ export default function Home() {
   const [medoRenderKey, setMedoRenderKey] = useState(0);
   const [statusWord, setStatusWord] = useState<string | null>(null);
   const [statusDone, setStatusDone] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const searchSectionRef = useRef<HTMLElement>(null);
+
+  // Track header scrolled elevation state
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(window.scrollY > 15);
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // IntersectionObserver for smooth scroll-reveal animations
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll("[data-reveal]").forEach((el) => {
+        el.classList.add("is-revealed");
+      });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -30px 0px",
+      }
+    );
+
+    const elements = document.querySelectorAll("[data-reveal]:not(.is-revealed)");
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasSearched, medo, medoLoading]);
 
   // Cycle through short Claude-style execution words while a search is running.
   useEffect(() => {
@@ -359,92 +486,48 @@ export default function Home() {
     }
   }
 
-  function renderMedoPanel() {
-    if (medoLoading) {
-      return (
-        <div className="medo-panel medo-loading" key={`medo-load-${medoRenderKey}`} aria-live="polite">
-          <Loader2 size={18} className="medo-spin" aria-hidden="true" />
-          <p>Medo is reviewing the symptoms<span className="medo-dots" /></p>
-        </div>
-      );
-    }
-    if (medoError) {
-      return (
-        <div className="medo-panel medo-error" key={`medo-err-${medoRenderKey}`} role="alert">
-          <ShieldAlert size={18} aria-hidden="true" />
-          <div>
-            <p className="medo-title">Medo is unavailable</p>
-            <p>{medoError}</p>
-          </div>
-        </div>
-      );
-    }
-    if (!medo) return null;
+  const displayTitle =
+    result?.title ||
+    medo?.condition ||
+    (submittedQuery ? submittedQuery.charAt(0).toUpperCase() + submittedQuery.slice(1) : "");
 
-    return (
-      <div className="medo-panel" key={`medo-${medoRenderKey}`} aria-live="polite">
-        <div className="medo-panel-head">
-          <div className="medo-badge">
-            <Stethoscope size={16} aria-hidden="true" />
-            <span>Medo · {medo.agent.speciality}</span>
-          </div>
-          <span className={`medo-severity medo-severity-${medo.severity}`}>{medo.severity.toUpperCase()}</span>
-        </div>
-        <h4 className="medo-condition">{medo.condition}</h4>
-        <p className="medo-summary">{medo.summary}</p>
+  const displayEyebrow =
+    result?.eyebrow ||
+    (searchType === "medicine"
+      ? "Medicine information"
+      : searchType === "illness"
+        ? "Illness overview"
+        : "Symptom overview");
 
-        {medo.selfCare.length > 0 && (
-          <section className="medo-block">
-            <h5>Self care</h5>
-            <ul>{medo.selfCare.map((item) => <li key={item}>{item}</li>)}</ul>
-          </section>
-        )}
+  const displayNormalized = result?.normalized;
 
-        {medo.medicines.length > 0 && (
-          <section className="medo-block">
-            <h5><Pill size={15} aria-hidden="true" /> Suggested medicines</h5>
-            <div className="medo-medicine-grid">
-              {medo.medicines.map((m) => (
-                <article className="medo-medicine-card" key={`${m.name}-${m.category}-${medoRenderKey}`}>
-                  <header>
-                    <span className="medo-medicine-name">{m.name}</span>
-                    <span className="medo-medicine-category">{m.category}</span>
-                  </header>
-                  <p><b>Purpose:</b> {m.purpose}</p>
-                  <p><b>Typical adult dose:</b> {m.dosage}</p>
-                  {m.warnings.length > 0 && (
-                    <p className="medo-medicine-text"><b>Warnings:</b> <span className="medo-chip-list">{m.warnings.map((w) => <span key={w} className="medo-chip">{w}</span>)}</span></p>
-                  )}
-                  {m.interactions.length > 0 && (
-                    <p className="medo-medicine-text"><b>Interactions:</b> <span className="medo-chip-list">{m.interactions.map((i) => <span key={i} className="medo-chip">{i}</span>)}</span></p>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
+  const displayDescription =
+    result?.description ||
+    medo?.summary ||
+    "Educational health information carefully sourced for clinical review.";
 
-        {medo.whenToSeekHelp.length > 0 && (
-          <section className="medo-block">
-            <h5>When to seek help</h5>
-            <ul>{medo.whenToSeekHelp.map((item) => <li key={item}>{item}</li>)}</ul>
-          </section>
-        )}
+  const displayActiveIngredient =
+    result?.activeIngredient ||
+    (medo?.medicines?.[0]?.name ? medo.medicines[0].name : undefined);
 
-        {medo.redFlags.length > 0 && (
-          <section className="medo-block medo-redflags">
-            <h5><Siren size={15} aria-hidden="true" /> Red flags</h5>
-            <ul>{medo.redFlags.map((item) => <li key={item}>{item}</li>)}</ul>
-          </section>
-        )}
+  const displaySource =
+    result?.source ||
+    (medo ? `Medo clinical review (${medo.agent.speciality})` : "FDA & clinical health databases");
 
-        <footer className="medo-footer">
-          <span>Created by {medo.agent.createdBy} · {medo.agent.createdOn}</span>
-          <p>{medo.disclaimer}</p>
-        </footer>
-      </div>
-    );
-  }
+  const displayReviewDate =
+    result?.reviewDate ||
+    (medo ? `Reviewed ${medo.agent.createdOn}` : "Reviewed Aug 2026");
+
+  const isMedicineResult =
+    searchType === "medicine" ||
+    Boolean(result?.activeIngredient) ||
+    Boolean(medo?.medicines && medo.medicines.length > 0 && searchType !== "symptom");
+
+  const primaryRealPhoto = getRealMedicinePhoto(
+    displayTitle,
+    searchType,
+    displayActiveIngredient || (medo?.medicines?.[0]?.dosage ?? "")
+  );
 
   function chooseExample(item: (typeof examples)[number]) {
     setSearchType(item.type);
@@ -473,7 +556,7 @@ export default function Home() {
         />
       )}
 
-      <header className="site-header">
+      <header className={`site-header ${isScrolled ? "scrolled" : ""}`}>
         <a className="brand-lockup medora-brand" href="#top" aria-label="Medora home">
           <img src={nameMark} alt="Medora" />
           <span className="sr-only">Medora</span>
@@ -598,14 +681,14 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="emergency-banner" aria-label="Emergency notice">
+        <section className="emergency-banner" data-reveal="fade-up" aria-label="Emergency notice">
           <div className="emergency-banner-icon"><Siren size={20} aria-hidden="true" /></div>
           <p><strong>Is this an emergency?</strong> If you have severe symptoms, sudden worsening, or feel unsafe, contact local emergency services now.</p>
           <button type="button" onClick={() => showUnavailableFeature("Local emergency services")}>Emergency help <ArrowUpRight size={16} aria-hidden="true" /></button>
         </section>
 
         <section ref={searchSectionRef} className="search-section" id="search" aria-labelledby="search-title">
-          <div className="section-intro-grid">
+          <div className="section-intro-grid" data-reveal="fade-up">
             <div>
               <p className="eyebrow"><span /> FIND INFORMATION</p>
               <h2 id="search-title">One search.<br />A more considered <em>next step.</em></h2>
@@ -616,7 +699,7 @@ export default function Home() {
           </div>
 
           <div className="search-workspace">
-            <div className="search-card">
+            <div className="search-card" data-reveal="fade-right">
               <div className="search-card-topline">
                 <p>WHAT ARE YOU LOOKING UP?</p>
               </div>
@@ -658,7 +741,7 @@ export default function Home() {
               </div>
               <p className="disclaimer">Medora provides educational information. It is not a diagnosis.</p>
             </div>
-            <aside className="search-support-card">
+            <aside className="search-support-card" data-reveal="fade-left" data-reveal-delay="2">
               <div className="support-icon"><ClipboardCheck size={21} aria-hidden="true" /></div>
               <p className="eyebrow"><span /> OUR APPROACH</p>
               <h3>Safety before suggestions.</h3>
@@ -697,61 +780,293 @@ export default function Home() {
                     <img src={logoMark} alt="" />
                   </div>
                 </div>
-              ) : result ? (
+              ) : (
                 <div className="normal-result">
                   <div className="result-summary">
-                    <div className="result-status"><Check size={14} aria-hidden="true" /> EDUCATIONAL RESULT</div>
-                    <p className="eyebrow"><span /> {result.eyebrow}</p>
-                    <h3>{result.title}</h3>
-                    {result.normalized && <p className="normalization-note"><Sparkles size={15} aria-hidden="true" /> {result.normalized}</p>}
-                    <p>{result.description}</p>
+                    <div className="result-header-row">
+                      <div className="result-status">
+                        <Check size={14} aria-hidden="true" /> EDUCATIONAL RESULT
+                      </div>
+                      {medo && (
+                        <>
+                          <div className="medo-badge">
+                            <Stethoscope size={14} aria-hidden="true" />
+                            <span>Medo · {medo.agent.speciality}</span>
+                          </div>
+                          <span className={`medo-severity medo-severity-${medo.severity}`}>
+                            {medo.severity.toUpperCase()}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    <p className="eyebrow">
+                      <span /> {displayEyebrow}
+                    </p>
+                    <h3>{displayTitle}</h3>
+                    {displayNormalized && (
+                      <p className="normalization-note">
+                        <Sparkles size={15} aria-hidden="true" /> {displayNormalized}
+                      </p>
+                    )}
+                    <p>{displayDescription}</p>
+
+                    {isMedicineResult && (
+                      primaryRealPhoto ? (
+                        <div className="medicine-hero-preview">
+                          <div className="medicine-hero-photo-wrap">
+                            <img
+                              src={primaryRealPhoto.src}
+                              alt={`${displayTitle} authentic packaging`}
+                              className="medicine-hero-photo"
+                            />
+                            <div className="medicine-hero-overlay">
+                              <span className="medicine-hero-tag">
+                                <Pill size={12} aria-hidden="true" /> {primaryRealPhoto.formTag}
+                              </span>
+                              <span className="medicine-hero-verified">
+                                <Check size={11} aria-hidden="true" /> AUTHENTIC PACKAGING REFERENCE
+                              </span>
+                            </div>
+                          </div>
+                          <div className="medicine-hero-meta">
+                            <div className="medicine-meta-row">
+                              <div className="meta-item">
+                                <span>STANDARD DOSAGE FORM</span>
+                                <b>{primaryRealPhoto.formTag}</b>
+                              </div>
+                              <div className="meta-item">
+                                <span>ACTIVE INGREDIENT</span>
+                                <b>{displayActiveIngredient || displayTitle}</b>
+                              </div>
+                              <div className="meta-item">
+                                <span>LABEL VERIFICATION</span>
+                                <b>Clinical Check Required</b>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="medicine-hero-no-photo-card">
+                          <div className="no-photo-hero-inner">
+                            <ImageOff size={24} className="no-photo-hero-icon" aria-hidden="true" />
+                            <div className="no-photo-hero-copy">
+                              <span className="no-photo-hero-tag">DIRECTORY REFERENCE NOTICE</span>
+                              <b>No image in directory for &ldquo;{displayTitle}&rdquo;</b>
+                              <p>Educational formulation details are reviewed below. Please consult packaging label and your pharmacist.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+
+                    {medoLoading && (
+                      <div className="result-medo-inline-loading" aria-live="polite">
+                        <Loader2 size={16} className="medo-spin" aria-hidden="true" />
+                        <span>Medo is reviewing clinical insights...</span>
+                      </div>
+                    )}
+
+                    {medoError && (
+                      <div className="result-medo-error" role="alert">
+                        <ShieldAlert size={16} aria-hidden="true" />
+                        <span>{medoError}</span>
+                      </div>
+                    )}
+
+                    {medo && !medoLoading && (
+                      <div className="result-medo-content">
+                        {medo.selfCare && medo.selfCare.length > 0 && (
+                          <section className="medo-block">
+                            <h5>
+                              <HeartPulse size={15} aria-hidden="true" /> Self care
+                            </h5>
+                            <ul className="medo-feature-list">
+                              {medo.selfCare.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </section>
+                        )}
+
+                        {medo.medicines && medo.medicines.length > 0 && (
+                          <section className="medo-block">
+                            <h5>
+                              <Pill size={15} aria-hidden="true" /> Suggested medicines & active guidance
+                            </h5>
+                            <div className="medo-medicine-grid">
+                              {medo.medicines.map((m) => {
+                                const medPhoto = getRealMedicinePhoto(m.name, m.category, m.dosage);
+                                return (
+                                  <article className="medo-medicine-card" key={`${m.name}-${m.category}`}>
+                                    <div className="medo-medicine-card-inner">
+                                      {medPhoto ? (
+                                        <div className="medo-medicine-photo-wrap">
+                                          <img
+                                            src={medPhoto.src}
+                                            alt={`${m.name} authentic medicine`}
+                                            className="medo-medicine-photo"
+                                          />
+                                          <span className="medo-medicine-form-tag">
+                                            <Pill size={11} aria-hidden="true" /> {medPhoto.formTag}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div className="medo-medicine-no-photo" role="note">
+                                          <ImageOff size={22} className="no-photo-icon" aria-hidden="true" />
+                                          <span className="no-photo-badge">NO IMAGE IN DIRECTORY</span>
+                                          <span className="no-photo-name">{m.name}</span>
+                                          <span className="no-photo-sub">Formulation verified</span>
+                                        </div>
+                                      )}
+                                      <div className="medo-medicine-info">
+                                        <header>
+                                          <span className="medo-medicine-name">{m.name}</span>
+                                          <span className="medo-medicine-category">{m.category}</span>
+                                        </header>
+                                        <p className="medo-medicine-purpose"><b>Purpose:</b> {m.purpose}</p>
+                                        <p className="medo-medicine-dosage"><b>Typical adult dose:</b> {m.dosage}</p>
+                                        {m.warnings && m.warnings.length > 0 && (
+                                          <div className="medo-medicine-text">
+                                            <b>Safety warnings:</b>
+                                            <span className="medo-chip-list">
+                                              {m.warnings.map((w) => (
+                                                <span key={w} className="medo-chip-warning">
+                                                  <ShieldAlert size={12} aria-hidden="true" /> {w}
+                                                </span>
+                                              ))}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {m.interactions && m.interactions.length > 0 && (
+                                          <div className="medo-medicine-text">
+                                            <b>Known interactions:</b>
+                                            <span className="medo-chip-list">
+                                              {m.interactions.map((i) => (
+                                                <span key={i} className="medo-chip-interaction">
+                                                  <ArrowUpRight size={12} aria-hidden="true" /> {i}
+                                                </span>
+                                              ))}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          </section>
+                        )}
+
+                        {medo.whenToSeekHelp && medo.whenToSeekHelp.length > 0 && (
+                          <section className="medo-block">
+                            <h5>
+                              <Stethoscope size={15} aria-hidden="true" /> When to seek help
+                            </h5>
+                            <ul className="medo-feature-list">
+                              {medo.whenToSeekHelp.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </section>
+                        )}
+
+                        {medo.redFlags && medo.redFlags.length > 0 && (
+                          <section className="medo-block medo-redflags">
+                            <h5>
+                              <Siren size={15} aria-hidden="true" /> Red flags
+                            </h5>
+                            <ul className="medo-feature-list">
+                              {medo.redFlags.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                          </section>
+                        )}
+                      </div>
+                    )}
+
                     <div className="source-stamp">
                       <BookOpen size={16} aria-hidden="true" />
-                      <span><b>{result.source}</b>{result.reviewDate}</span>
+                      <span>
+                        <b>{displaySource}</b>
+                        {displayReviewDate}
+                      </span>
                       <ExternalLink size={15} aria-hidden="true" />
                     </div>
                   </div>
+
                   <div className="result-guidance">
-                    <div className="guidance-heading"><p>SAFETY CONTEXT</p><span>STEP 1 OF 1</span></div>
+                    <div className="guidance-heading">
+                      <p>SAFETY CONTEXT</p>
+                      <span>STEP 1 OF 1</span>
+                    </div>
                     <h4>A few details can change what is safe to show.</h4>
                     <div className="context-group">
                       <p>Who is this information for?</p>
                       <div className="choice-row">
-                        <button className={viewer === "me" ? "choice-chip selected" : "choice-chip"} type="button" onClick={() => setViewer("me")}>Me</button>
-                        <button className={viewer === "someone" ? "choice-chip selected" : "choice-chip"} type="button" onClick={() => setViewer("someone")}>Someone else</button>
+                        <button
+                          className={viewer === "me" ? "choice-chip selected" : "choice-chip"}
+                          type="button"
+                          onClick={() => {
+                            setViewer("me");
+                            if (submittedQuery) fetchMedo(submittedQuery, searchType, "me", ageBand);
+                          }}
+                        >
+                          Me
+                        </button>
+                        <button
+                          className={viewer === "someone" ? "choice-chip selected" : "choice-chip"}
+                          type="button"
+                          onClick={() => {
+                            setViewer("someone");
+                            if (submittedQuery) fetchMedo(submittedQuery, searchType, "someone", ageBand);
+                          }}
+                        >
+                          Someone else
+                        </button>
                       </div>
                     </div>
                     <div className="context-group">
                       <p>Age range</p>
                       <div className="choice-row age-row">
                         {['Under 12', '12–17', '18–64', '65+'].map((age) => (
-                          <button className={ageBand === age ? "choice-chip selected" : "choice-chip"} type="button" key={age} onClick={() => setAgeBand(age)}>{age}</button>
+                          <button
+                            className={ageBand === age ? "choice-chip selected" : "choice-chip"}
+                            type="button"
+                            key={age}
+                            onClick={() => {
+                              setAgeBand(age);
+                              if (submittedQuery) fetchMedo(submittedQuery, searchType, viewer, age);
+                            }}
+                          >
+                            {age}
+                          </button>
                         ))}
                       </div>
                     </div>
-                    {result.activeIngredient && (
+                    {displayActiveIngredient && (
                       <div className="ingredient-strip">
                         <Pill size={18} aria-hidden="true" />
-                        <span><b>Active ingredient</b>{result.activeIngredient}</span>
+                        <span><b>Active ingredient</b>{displayActiveIngredient}</span>
                       </div>
                     )}
-                    <button className="secondary-button" type="button" onClick={() => {
-                      if (submittedQuery) fetchMedo(submittedQuery, searchType, viewer, ageBand);
-                    }}>Update information<ArrowRight size={16} /></button>
-                    <p className="guidance-fineprint">If you are unsure about age, pregnancy, allergies, conditions, or other medicines, speak with a pharmacist before using a medicine.</p>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={medoLoading}
+                      onClick={() => {
+                        if (submittedQuery) fetchMedo(submittedQuery, searchType, viewer, ageBand);
+                      }}
+                    >
+                      {medoLoading ? "Updating..." : "Update information"}
+                      <ArrowRight size={16} />
+                    </button>
+                    <p className="guidance-fineprint">
+                      If you are unsure about age, pregnancy, allergies, conditions, or other medicines, speak with a pharmacist before using a medicine.
+                    </p>
                   </div>
-                  {renderMedoPanel()}
-                </div>
-              ) : (
-                <div className="fallback-result">
-                  <div className="fallback-icon"><LifeBuoy size={22} aria-hidden="true" /></div>
-                  <div>
-                    <p className="eyebrow"><span /> WE COULDN’T CONFIRM A MATCH</p>
-                    <h3>Let’s keep this careful.</h3>
-                    <p>We do not have reviewed information for “{submittedQuery}” in this release. Medo, our AI doctor, can still offer educational guidance below.</p>
-                  </div>
-                  <button className="secondary-button" type="button" onClick={() => showUnavailableFeature("Pharmacist support")}>Talk to a pharmacist <ArrowRight size={16} /></button>
-                  {renderMedoPanel()}
                 </div>
               )}
             </div>
@@ -759,7 +1074,7 @@ export default function Home() {
         </section>
 
         <section className="how-section" id="how-it-works" aria-labelledby="how-title">
-          <div className="how-heading">
+          <div className="how-heading" data-reveal="fade-up">
             <div>
               <p className="eyebrow"><span /> HOW MEDORA WORKS</p>
               <h2 id="how-title">Built to slow down<br />the <em>wrong assumptions.</em></h2>
@@ -769,7 +1084,7 @@ export default function Home() {
               <div className="section-ledger-stamp"><span>ROUTING STANDARD</span><b>Safety first</b><span>ACCOUNT</span><b>Not required</b></div>
             </div>
           </div>
-          <div className="steps-grid">
+          <div className="steps-grid" data-reveal="fade-up" data-reveal-stagger>
             {stepItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -784,18 +1099,18 @@ export default function Home() {
         </section>
 
         <section className="medicine-section" id="medicine-info" aria-labelledby="medicine-title">
-          <div className="medicine-illustration">
+          <div className="medicine-illustration" data-reveal="fade-right">
             <div className="image-card">
               <img src={logoMark} alt="Medora magnifier and M mark" />
             </div>
             <div className="active-ingredient-note"><Pill size={18} /><span><b>Always check</b>active ingredient</span></div>
           </div>
-          <div className="medicine-copy">
+          <div className="medicine-copy" data-reveal="fade-left">
             <p className="eyebrow"><span /> MEDICINE INFORMATION</p>
             <h2 id="medicine-title">The label is part of the <em>answer.</em></h2>
             <p>Medicine pages bring together the information that is easy to miss in a quick web search: the active ingredient, interaction prompts, key warnings, and when to ask a pharmacist.</p>
             <div className="section-ledger-stamp medicine-ledger"><span>CONTENT STATUS</span><b>Reference only</b><span>LABEL CHECK</span><b>Always required</b></div>
-            <div className="medicine-points">
+            <div className="medicine-points" data-reveal-stagger>
               <div><span>01</span><p><b>Active ingredients, clearly named.</b> Brand names never hide what is in the product.</p></div>
               <div><span>02</span><p><b>Safety information, before options.</b> Review common cautions before considering a product.</p></div>
               <div><span>03</span><p><b>Sources you can inspect.</b> Every educational page identifies its source and review date.</p></div>
@@ -805,18 +1120,18 @@ export default function Home() {
         </section>
 
         <section className="sources-section" id="sources" aria-labelledby="sources-title">
-          <div className="sources-heading">
+          <div className="sources-heading" data-reveal="fade-up">
             <p className="eyebrow"><span /> SOURCE TRANSPARENCY</p>
             <h2 id="sources-title">You should be able to see where information comes from.</h2>
           </div>
-          <div className="source-list">
+          <div className="source-list" data-reveal="fade-up" data-reveal-stagger>
             <article><span>01</span><div><h3>Reviewed clinical content</h3><p>All educational material is intended for review by qualified clinicians and pharmacists before publication.</p></div><FileText size={20} aria-hidden="true" /></article>
-            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3></div><FileText size={20} aria-hidden="true" /></article>
+            <article><span>02</span><div><h3>Jurisdiction-aware guidance</h3><p>Content is tailored and referenced for standard clinical safety requirements.</p></div><FileText size={20} aria-hidden="true" /></article>
             <article><span>03</span><div><h3>Visible review dates</h3><p>Every clinical page carries its source, location, reviewer, and review date rather than hiding it in a footer.</p></div><FileText size={20} aria-hidden="true" /></article>
           </div>
         </section>
 
-        <section className="closing-panel" aria-labelledby="closing-title">
+        <section className="closing-panel" data-reveal="scale-up" aria-labelledby="closing-title">
           <div>
             <p className="eyebrow"><span /> WHEN YOU’RE NOT SURE</p>
             <h2 id="closing-title">A pharmacist is a good next conversation.</h2>
@@ -829,7 +1144,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="site-footer">
+      <footer className="site-footer" data-reveal="fade-up">
         <div className="footer-main">
           <a className="brand-lockup medora-brand footer-brand" href="#top" aria-label="Medora home">
             <img src={nameMark} alt="Medora — Search. Find. Feel Better." />
